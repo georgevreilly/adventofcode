@@ -23,8 +23,8 @@ def parse_data(lines: list[str]):
 
 def bingo(board) -> bool:
     for i in range(5):
+        col = [row[i] for row in board]
         row = board[i]
-        col = [board[r][i] for r in range(5)]
         if all(n >= 100 for n in row):
             return f"row{i+1}", row
         if all(n >= 100 for n in col):
@@ -32,19 +32,17 @@ def bingo(board) -> bool:
     return "", []
 
 def unmarked_sum(board) -> int:
-    sum = 0
-    for r in range(5):
-        for c in range(5):
-            n = board[r][c]
-            if n < 100:
-                sum += n
-    return sum
+    return sum(
+        n for row in board
+            for n in row
+                if n < 100
+    )
 
 
 def winning_board_score(numbers, boards, ignore):
     for n in numbers:
         # print("Calling", n)
-        for b, board in enumerate(boards, 0):
+        for b, board in enumerate(boards):
             if ignore[b]:
                 continue
             for r, row in enumerate(board):
@@ -62,7 +60,7 @@ def winning_board_score(numbers, boards, ignore):
 
 def last_loser(numbers, boards):
     count = len(boards)
-    ignore = [False for _ in range(count)]
+    ignore = [False] * count
     for _ in range(count):
         n, sum, score, b = winning_board_score(numbers, boards, ignore)
         winner = boards[b]
