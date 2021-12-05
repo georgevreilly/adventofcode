@@ -13,26 +13,29 @@ import os
 TEST_DATA = f"day{DAY:02}test_input.txt"
 REAL_DATA = f"day{DAY:02}input.txt"
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=f"AdventOfCode: Day {DAY}")
     parser.set_defaults(
-        input_filename=TEST_DATA,
+        input_filename=None,
+        real=True,
         verbose=False,
     )
-    parser.add_argument(
-        "--test", "-t", dest="input_filename",
-        const=TEST_DATA, action="store_const",
-        help="Use %(const)r as input_filename")
-    parser.add_argument(
-        "--real", "-r", dest="input_filename",
-        const=REAL_DATA, action="store_const",
-        help="Use %(const)r as input_filename")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--test", "-t", dest="real", action="store_false",
+        help=f"Use {TEST_DATA!r} as input_filename")
+    group.add_argument(
+        "--real", "-r", dest="real", action="store_true",
+        help="Use {REAL_DATA!r} as input_filename")
+
     parser.add_argument(
         "--verbose", "-v", action="store_true",
         help="More verbose logging")
     namespace = parser.parse_args()
 
+    namespace.input_filename = REAL_DATA if namespace.real else TEST_DATA
     log_level = logging.DEBUG if namespace.verbose else logging.INFO
     logging.basicConfig(level=log_level)
 
@@ -65,6 +68,7 @@ def hydrothermal_vents(lines, width: int) -> int:
         assert 0 <= y1 < width
         assert 0 <= x2 < width
         assert 0 <= y2 < width
+
         count = 0
         x_dist = x2 - x1
         y_dist = y2 - y1
@@ -72,7 +76,7 @@ def hydrothermal_vents(lines, width: int) -> int:
         y_step = +1 if y_dist > 0 else -1 if y_dist < 0 else 0
         if x_dist == 0:
             count = abs(y_dist) + 1
-        elif y1 == y2:
+        elif y_dist == 0:
             count = abs(x_dist) + 1
         elif abs(x_dist) == abs(y_dist):
             count = abs(x_dist) + 1
@@ -97,7 +101,7 @@ def main():
     lines = parse_data(text_data)
     logging.debug("\nlines: %s", lines)
     overlapped_lines = hydrothermal_vents(
-        lines, 1000 if namespace.input_filename == REAL_DATA else 10)
+        lines, 1000 if namespace.real else 10)
     print(f"Overlap: {overlapped_lines}")
 
 
