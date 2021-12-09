@@ -54,19 +54,56 @@ def read_data(input_filename: str):
 def parse_data(text_data: list[str]) -> list[str]:
     results = []
     for line in text_data:
-        pass
+        results.append([int(d) for d in line.strip()])
     return results
 
 
+def lowest_points(data) -> int:
+    width = len(data[0])
+    height = len(data)
+    low_points = []
+    for r, row in enumerate(data):
+        for c, loc in enumerate(row):
+            lowest = True
+            for dx, dy in [(-1, 0), (+1, 0), (0, -1), (0, +1)]:
+                if 0 <= c + dx < width and 0 <= r + dy < height:
+                    if loc >= data[r + dy][c + dx]:
+                        lowest = False
+                        break
+            if lowest:
+                low_points.append((r, c))
+    return low_points
+
 
 def compute1(data) -> int:
-    total = 0
-    return total
+    return sum(1+data[r][c] for r, c in lowest_points(data))
+
+
+def basin_neighbors(data, r, c, seen):
+    if (r, c) in seen:
+        return
+    elif data[r][c] == 9:
+        return
+    seen.add((r, c))
+    width = len(data[0])
+    height = len(data)
+    for dx, dy in [(-1, 0), (+1, 0), (0, -1), (0, +1)]:
+        if 0 <= c + dx < width and 0 <= r + dy < height:
+            basin_neighbors(data, r+dy, c+dx, seen)
 
 
 def compute2(data) -> int:
-    total = 0
-    return total
+    basins = []
+    for r, c in lowest_points(data):
+        seen = set()
+        basin_neighbors(data, r, c, seen)
+        count = len(seen)
+        basins.append(count)
+    largest = sorted(basins)[-3:]
+    n = 1
+    for l in largest:
+        n *= l
+    return n
 
 
 def main():
