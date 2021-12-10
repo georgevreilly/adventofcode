@@ -55,8 +55,9 @@ def parse_data(text_data: list[str]) -> list[str]:
     return [line.strip() for line in text_data]
 
 
-CLOSER = {"(": ")", "[": "]", "{": "}", "<": ">"}
-OPENER = {")": "(", "]": "[", "}": "{", ">": "<"}
+PAIRS = "(),[],{},<>".split(",")
+CLOSER = {l: r for l,r in PAIRS}
+OPENER = {r: l for l,r in PAIRS}
 
 
 def compute1(data) -> int:
