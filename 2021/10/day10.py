@@ -52,18 +52,46 @@ def read_data(input_filename: str):
 
 
 def parse_data(text_data: list[str]) -> list[str]:
-    results = []
-    for line in text_data:
-        results.append([int(d) for d in line.strip()])
-    return results
+    return [line.strip() for line in text_data]
+
+
+CLOSER = {"(": ")", "[": "]", "{": "}", "<": ">"}
+OPENER = {")": "(", "]": "[", "}": "{", ">": "<"}
 
 
 def compute1(data) -> int:
-    return 0
+    score_values = {")": 3, "]": 57, "}": 1197, ">": 25137}
+    total = 0
+    for line in data:
+        stack = []
+        for c in line:
+            if c in CLOSER:
+                stack.append(c)
+            elif stack.pop() != OPENER[c]:
+                total += score_values[c]
+                break
+    return total
 
 
 def compute2(data) -> int:
-    return 0
+    score_values = {")": 1, "]": 2, "}": 3, ">": 4}
+    scores = []
+    for line in data:
+        stack = []
+        score = 0
+        for c in line:
+            if c in CLOSER:
+                stack.append(c)
+            elif stack.pop() != OPENER[c]:
+                break
+        else:
+            while len(stack) > 0:
+                c = CLOSER[stack.pop()]
+                score = score * 5 + score_values[c]
+            scores.append(score)
+    scores.sort()
+    # print(f"{scores=}")
+    return scores[len(scores) // 2]
 
 
 def main():
