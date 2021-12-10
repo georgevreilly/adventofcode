@@ -89,9 +89,7 @@ def compute2(data) -> int:
                 c = CLOSER[stack.pop()]
                 score = score * 5 + score_values[c]
             scores.append(score)
-    scores.sort()
-    # print(f"{scores=}")
-    return scores[len(scores) // 2]
+    return sorted(scores)[len(scores) // 2]
 
 
 def main():
