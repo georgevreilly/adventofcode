@@ -32,6 +32,9 @@ def parse_args() -> argparse.Namespace:
         help="Use {REAL_DATA!r} as input_filename")
 
     parser.add_argument(
+        "--steps", "-s", type=int,
+        help="Number of steps")
+    parser.add_argument(
         "--custom", "-C", action="store_true",
         help="Use custom data")
     parser.add_argument(
@@ -51,37 +54,84 @@ def read_data(input_filename: str):
         return f.readlines()
 
 
-def parse_data(text_data: list[str]) -> list[str]:
-    return [line.strip() for line in text_data]
+def parse_data(text_data: list[str]) -> list[list[int]]:
+    return [[int(d) for d in line.strip()]
+            for line in text_data]
 
 
-def compute1(data) -> int:
-    total = 0
-    for line in data:
-        pass
-    return total
-
-
-def compute2(data) -> int:
-    total = 0
-    for line in data:
-        pass
-    return total
-
-
-def main():
-    namespace = parse_args()
+def load_data(namespace) -> list[list[int]]:
     if namespace.custom:
-       data = parse_data(None)
+        text_data = ["-1"]
+        data = parse_data(text_data)
     else:
         text_data = read_data(namespace.input_filename)
         logging.info("%s", namespace.input_filename)
         logging.debug("%s", text_data)
         data = parse_data(text_data)
-    logging.debug("\ndata: %s", data)
-    result1 = compute1(data)
+    return data
+
+
+def grid_to_str(grid: list[list[int]], prefix="") -> str:
+    return prefix + ("\n" + prefix).join(
+        "".join([str(n) for n in row]) for row in grid) + "\n"
+
+
+def update_grid(grid: list[list[int]], r: int, c: int) -> int:
+    grid[r][c] += 1
+    if grid[r][c] != 10:
+        return 0
+
+    flashes = 1
+    width, height = len(grid[0]), len(grid)
+    for r2 in (r-1, r, r+1):
+        if 0 <= r2 < height:
+            for c2 in (c-1, c, c+1):
+                if r != r2 or c != c2:
+                    if 0 <= c2 < width:
+                        flashes += update_grid(grid, r2, c2)
+    return flashes
+
+
+def compute1(grid: list[list[int]], steps: int) -> int:
+    total = 0
+    width, height = len(grid[0]), len(grid)
+    # print(grid_to_str(grid))
+    for step in range(1, steps + 1):
+        flashes = 0
+        for r in range(height):
+            for c in range(width):
+                flashes += update_grid(grid, r, c)
+        for r in range(height):
+            for c in range(width):
+                if grid[r][c] > 9:
+                    grid[r][c] = 0
+        # print(f"\n{step=}: {rounds=} {flashes=}")
+        # print(grid_to_str(grid))
+        total += flashes
+    return total
+
+
+def compute2(grid: list[list[int]], steps: int) -> int:
+    width, height = len(grid[0]), len(grid)
+    for step in range(1, steps + 1):
+        flashes = 0
+        for r in range(height):
+            for c in range(width):
+                flashes += update_grid(grid, r, c)
+        for r in range(height):
+            for c in range(width):
+                if grid[r][c] > 9:
+                    grid[r][c] = 0
+        if flashes == width * height:
+            return step
+    return -1
+
+
+def main():
+    namespace = parse_args()
+    result1 = compute1(load_data(namespace), min(100, namespace.steps))
     print(f"{result1=}")
-    result2 = compute2(data)
+    result2 = compute2(load_data(namespace), namespace.steps)
     print(f"{result2=}")
 
 
