@@ -44,7 +44,10 @@ def parse_args() -> argparse.Namespace:
         help="More verbose logging")
     namespace = parser.parse_args()
 
-    namespace.input_filename = REAL_DATA if namespace.real else TEST_DATA
+    if namespace.custom:
+        namespace.input_filename = f"day{DAY:02}test_input{namespace.custom}.txt"
+    else:
+        namespace.input_filename = REAL_DATA if namespace.real else TEST_DATA
     log_level = logging.DEBUG if namespace.verbose else logging.INFO
     logging.basicConfig(level=log_level)
 
@@ -66,44 +69,8 @@ def parse_data(text_data: list[str]) -> dict[str, list[str]]:
 
 
 def load_data(namespace) -> list[list[int]]:
-    if namespace.custom == 1:
-        text_data = [
-            "dc-end",
-            "HN-start",
-            "start-kj",
-            "dc-start",
-            "dc-HN",
-            "LN-dc",
-            "HN-end",
-            "kj-sa",
-            "kj-HN",
-            "kj-dc",
-        ]
-    elif namespace.custom == 2:
-        text_data = [
-            "fs-end",
-            "he-DX",
-            "fs-he",
-            "start-DX",
-            "pj-DX",
-            "end-zg",
-            "zg-sl",
-            "zg-pj",
-            "pj-he",
-            "RW-he",
-            "fs-DX",
-            "pj-RW",
-            "zg-RW",
-            "start-pj",
-            "he-WI",
-            "zg-he",
-            "pj-fs",
-            "start-RW",
-        ]
-    else:
-        text_data = read_data(namespace.input_filename)
-        logging.info("%s", namespace.input_filename)
-
+    text_data = read_data(namespace.input_filename)
+    logging.info("%s", namespace.input_filename)
     logging.debug("%s", text_data)
     data = parse_data(text_data)
     return data
@@ -165,8 +132,8 @@ def compute2(pairs: dict[str, list[str]]) -> int:
 
 def main():
     namespace = parse_args()
-    # result1 = compute1(load_data(namespace))
-    # print(f"{result1=}")
+    result1 = compute1(load_data(namespace))
+    print(f"{result1=}")
     result2 = compute2(load_data(namespace))
     print(f"{result2=}")
 
