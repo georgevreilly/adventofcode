@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
+from collections import defaultdict
 
 DAY = 12
 # https://adventofcode.com/2021/day/12
@@ -77,14 +77,15 @@ def load_data(namespace) -> list[list[int]]:
 
 
 def explore1(node: str, pairs: dict[str, list[str]], seen: set[str], path: list[str]):
-    logging.debug(f"explore1: {path=} {node=} {seen=} dsts={pairs[node]}")
+    logging.debug(f"explore1: {path=} {node=} {seen=} caves={pairs[node]}")
     if node == "end":
         logging.debug(f"\tPath: {path}")
         yield path
-    for dst in pairs[node]:
-        if dst in seen and dst.islower():
-            continue
-        yield from explore1(dst, pairs, seen | {node}, path + [dst])
+    else:
+        for cave in pairs[node]:
+            if cave in seen and cave.islower():
+                continue
+            yield from explore1(cave, pairs, seen | {node}, path + [cave])
 
 
 def compute1(pairs: dict[str, list[str]]) -> int:
@@ -98,29 +99,16 @@ def explore2(node: str, pairs: dict[str, list[str]], seen: dict[str, int], path:
     if node == "end":
         logging.debug(f"\tPath: {path}")
         yield path
-        return
-
-    seen = seen.copy()
-    seen[node] += 1
-    logging.debug(f"explore2: path={','.join(path)} {node=} {seen=} dsts={pairs[node]}")
-    for dst in pairs[node]:
-        if dst == "start":
-            continue
-        prev = seen[dst]
-        do_it = True
-        if dst.islower():
-            if prev == 2:
-                logging.debug(f"Skipping {dst} (2)")
-                do_it = False
-            elif prev == 1:
-                for n, c in seen.items():
-                    if c == 2 and n.islower() and n != dst:
-                        logging.debug(f"Skipping {dst} because {n}={c}")
-                        do_it = False
-                        break
-
-        if do_it:
-            yield from explore2(dst, pairs, seen, path + [dst])
+    else:
+        seen = seen.copy()
+        if node.islower():
+            seen[node] += 1
+        logging.debug(f"explore2: path={','.join(path)} {node=} {seen=} caves={pairs[node]}")
+        for cave in set(pairs[node]) - {"start"}:
+            prev = seen[cave]
+            if prev == 2 or (prev == 1 and any(v == 2 for v in seen.values())):
+                continue
+            yield from explore2(cave, pairs, seen, path + [cave])
 
 
 def compute2(pairs: dict[str, list[str]]) -> int:
