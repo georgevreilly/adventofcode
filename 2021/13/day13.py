@@ -54,9 +54,25 @@ def read_data(input_filename: str):
         return f.readlines()
 
 
-def parse_data(text_data: list[str]) -> list[list[int]]:
-    return [[int(d) for d in line.strip()]
-            for line in text_data]
+def parse_data(text_data: str):
+    dots = []
+    folds = []
+    doing_dots = True
+    for line in text_data:
+        line = line.strip()
+        if doing_dots:
+            if line == "":
+                doing_dots = False
+            else:
+                x, y = [int(d.strip()) for d in line.split(",")]
+                dots.append((x, y))
+        else:
+            instruction = line.split()[-1]
+            a, b = instruction.split("=")
+            folds.append((a, int(b)))
+    logging.debug(f"{dots=}")
+    logging.debug(f"{folds=}")
+    return dots, folds
 
 
 def load_data(namespace) -> list[list[int]]:
@@ -71,27 +87,61 @@ def load_data(namespace) -> list[list[int]]:
     return data
 
 
-def grid_to_str(grid: list[list[int]], prefix="") -> str:
+def grid_to_str(grid: list[list[int]], width, height, prefix="") -> str:
     return prefix + ("\n" + prefix).join(
-        "".join([str(n) for n in row]) for row in grid) + "\n"
+        "".join([str(n) for n in row[:width]])
+            for row in grid[:height]) + "\n"
 
 
-def compute1(grid: list[list[int]]) -> int:
-    total = 0
+def fold(dots, folds):
+    width = height = 0
+    for x, y in dots:
+        width = max(width, x + 1)
+        height = max(height, y + 1)
+    grid = [["." for _ in range(width)] for _ in range(height)]
+    for x, y in dots:
+        grid[y][x] = "#"
+    logging.debug(grid_to_str(grid, width, height))
+    for axis, line in folds:
+        logging.debug(f"{axis=} {line=} {width=} {height=}")
+        if axis == "x":
+            for x1 in range(line+1, width):
+                for y in range(height):
+                    if grid[y][x1] == "#":
+                        grid[y][2 * line - x1] = "#"
+            width = line
+        elif axis == "y":
+            for y1 in range(line+1, height):
+                for x in range(width):
+                    if grid[y1][x] == "#":
+                        grid[2 * line - y1][x] = "#"
+            height = line
+        else:
+            raise ValueError(f"Unknown {axis=}")
+        logging.debug(grid_to_str(grid, width, height))
+    return grid, width, height
+
+
+def compute1(dots, folds) -> int:
+    grid, width, height = fold(dots, folds[:1])
+    total = sum(
+        1 if grid[y][x] == "#" else 0
+            for y in range(height)
+                for x in range(width))
     return total
 
 
-def compute2(grid: list[list[int]]) -> int:
-    total = 0
-    return total
+def compute2(dots, folds):
+    grid, width, height = fold(dots, folds)
+    print(grid_to_str(grid, width, height))
+    return grid
 
 
 def main():
     namespace = parse_args()
-    result1 = compute1(load_data(namespace))
+    result1 = compute1(*load_data(namespace))
     print(f"{result1=}")
-    result2 = compute2(load_data(namespace))
-    print(f"{result2=}")
+    compute2(*load_data(namespace))
 
 
 if __name__ == "__main__":
