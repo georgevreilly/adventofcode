@@ -55,8 +55,9 @@ def read_data(input_filename: str):
 
 
 def parse_data(text_data: list[str]) -> list[list[int]]:
-    return [[int(d) for d in line.strip()]
-            for line in text_data]
+    xy = text_data[0].split("target area: ")[1].split(", ")
+    pairs = [r.split("..") for r in [q.split("=")[1] for q in xy]]
+    return [int(n) for pair in pairs for n in pair]
 
 
 def load_data(namespace) -> list[list[int]]:
@@ -65,7 +66,7 @@ def load_data(namespace) -> list[list[int]]:
         data = parse_data(text_data)
     else:
         text_data = read_data(namespace.input_filename)
-        logging.info("%s", namespace.input_filename)
+        logging.info("from: %s", namespace.input_filename)
         logging.debug("%s", text_data)
         data = parse_data(text_data)
     return data
@@ -76,20 +77,81 @@ def grid_to_str(grid: list[list[int]], prefix="") -> str:
         "".join([str(n) for n in row]) for row in grid) + "\n"
 
 
+def x_velocities(x1, x2):
+    values = []
+    for xv1 in range(x2, 1, -1):
+        px = 0
+        for xv2 in range(xv1, -1, -1):
+            px += xv2
+            if x1 <= px <= x2:
+                values.append((xv1, xv1 - xv2 + 1))
+                break
+            elif px > x2:
+                break
+    values.reverse()
+    return values
 
-def compute1(grid: list[list[int]]) -> int:
-    return 0
+
+def probe_path(xv, yv, x1, x2, y1, y2):
+    px = py = 0
+    path = [(px, py)]
+    y_max = y1
+    logging.debug(f"{px=},{py=} {xv=},{yv=} {x1=},{x2=} {y1=},{y2=}")
+    while True:
+        px += xv; py += yv
+        y_max = max(py, y_max)
+        path.append((px, py))
+        if xv:
+            xv += -1 if xv > 0 else +1
+        yv -= 1
+        msg = f"{px=},{py=} {xv=},{yv=}"
+        if x1 <= px <= x2 and y1 <= py <= y2:
+            logging.debug("%s hit target!", msg)
+            return path, y_max
+        if px > x2 or py < y1:
+            logging.debug("%s missed target!", msg)
+            return None, y1
 
 
-def compute2(tile: list[list[int]]) -> int:
-    return 0
+def compute1(x1, x2, y1, y2) -> int:
+    # print(f"{x1=} {x2=} {y1=} {y2=}") 
+    # path, y_max = probe_path(7, 2, x1, x2, y1, y2)
+    # print(f"{path=} {y_max=}\n")
+    # path, y_max = probe_path(6, 3, x1, x2, y1, y2)
+    # print(f"{path=} {y_max=}\n")
+    # path, y_max = probe_path(9, 0, x1, x2, y1, y2)
+    # print(f"{path=} {y_max=}\n")
+    # path, y_max = probe_path(17, -4, x1, x2, y1, y2)
+    # print(f"{path=} {y_max=}\n")
+    # path, y_max = probe_path(6, 9, x1, x2, y1, y2)
+    # print(f"{path=} {y_max=}\n")
+    xv, steps = x_velocities(x1, x2)[0]
+    best_y_max = y1
+    best_yv = None
+    for yv in range(1, 1000):
+        path, y_max = probe_path(xv, yv, x1, x2, y1, y2)
+        logging.debug(yv, y_max)
+        if y_max > best_y_max:
+            best_y_max = y_max
+            best_yv = yv
+    return best_y_max, best_yv
+
+
+def compute2(x1, x2, y1, y2) -> int:
+    count = 0
+    for xv, steps in x_velocities(x1, x2):
+        for yv in range(y1, 4000):
+            path, y_max = probe_path(xv, yv, x1, x2, y1, y2)
+            if path is not None:
+                count += 1
+    return count
 
 
 def main():
     namespace = parse_args()
-    result1 = compute1(load_data(namespace))
+    result1 = compute1(*load_data(namespace))
     print(f"{result1=}")
-    result2 = compute2(load_data(namespace))
+    result2 = compute2(*load_data(namespace))
     print(f"{result2=}")
 
 
