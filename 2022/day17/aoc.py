@@ -86,29 +86,29 @@ def load_data(namespace) -> list[str]:
 def parse_data(text_data: str) -> list[str]:
     return text_data.strip()
 
-
+ARROWS = ('←', '→', '↑', '↓')
 ROCK_SHAPES = (
     (
-        '-',
+        '━',
         4, 1,
         0b1111,
     ),
     (
-        '+',
+        '＋',
         3, 3,
         0b010,
         0b111,
         0b010,
     ),
     (
-        'L',
+        '┘',
         3, 3,
         0b001,
         0b001,
         0b111,
     ),
     (
-        '|',
+        '┃',
         1, 4,
         0b1,
         0b1,
@@ -116,7 +116,7 @@ ROCK_SHAPES = (
         0b1,
     ),
     (
-        '.',
+        '■',
         2, 2,
         0b11,
         0b11,
@@ -134,7 +134,7 @@ def print_chamber(label, chamber, force=False):
     if force or logging.root.isEnabledFor(logging.DEBUG):
         print(f"\n{label}")
         for row in reversed(chamber):
-            print(f"{row:07b}".replace("0", ".").replace("1", "#"))
+            print(f"{row:0{WIDTH}b}".replace("0", ".").replace("1", "#"))
 
 
 def simulate(jets: str, rock_count: int) -> int:
@@ -170,7 +170,7 @@ def simulate(jets: str, rock_count: int) -> int:
                     cr = chamber[ry + y]
                     rk = rock[-y - 1] << (shift - dx)
                     if (cr ^ rk) & cr != cr:
-                        logging.debug(f"horiz overlap at {ry+y}: {cr:07b} {rk=:07b}")
+                        logging.debug(f"horiz overlap at {ry+y}: {cr:0{WIDTH}b} {rk=:0{WIDTH}b}")
                         dx = 0
                         break
             else:
@@ -196,7 +196,7 @@ def simulate(jets: str, rock_count: int) -> int:
                 cr = chamber[ry + y - 1]
                 rk = rock[-y - 1] << shift
                 if (cr ^ rk) & cr != cr:
-                    logging.debug(f"vert overlap at {ry+y}: {cr:07b} {rk=:07b}")
+                    logging.debug(f"vert overlap at {ry+y}: {cr:0{WIDTH}b} {rk=:0{WIDTH}b}")
                     dy = 0
                     break
             ry += dy
